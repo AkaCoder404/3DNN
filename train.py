@@ -10,7 +10,7 @@ import os
 import sys
 import argparse
 import torch
-from time import time
+import time
 
 from tensorboardX import SummaryWriter
 from torch.utils.data import DataLoader

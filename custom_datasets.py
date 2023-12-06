@@ -1,6 +1,6 @@
 """
 Title: Custom Datasets
-Description: Custom Datasets for 3D Point Clouds
+Description: Custom Datasets for different 3D Point Clouds Benchmark Datasets
 """
 
 import os
@@ -133,6 +133,7 @@ class ModelNetPlyHDF52048DataLoader(Dataset):
             return 9840  # 2048 + 2048 + 2048 + 2048 + 1468
         elif self.split == "test":
             return 2048 + 420
+        
     
     def __getitem__(self, idx):
         file_idx = idx // 2048  # index div 2048 to get the file index
@@ -153,7 +154,56 @@ class ModelNetPlyHDF52048DataLoader(Dataset):
 
         # return point_set, label[point_idx].squeeze()
  
- 
+class TUBerlinDataLoader(Dataset):
+    """
+    Dataloader for Tu-Berlin Dataset
+    """
+    def __init__(self, root, num_point, split="train", process_data=False):
+        self.root = root
+        self.npoints = num_point
+        self.process_data = process_data
+        
+        file_list_name = 'train_files.txt' if split == "train" else 'test_files.txt'
+        self.files = [os.path.join(self.root, line.rstrip()[2:]) for line in open(os.path.join(self.root, file_list_name))]
+        print(self.files)
+        
+        # Preload data
+        self.point_sets = np.empty((0, self.npoints, 3))
+        self.labels = []
+        for f in self.files:
+            point_set, label = load_h5(f)
+            print(len(label))
+            
+            # Append dataset to one numpy array
+            print(point_set.shape)
+            print(self.point_sets.shape)
+            self.point_sets = np.concatenate((self.point_sets, point_set[:, :self.npoints, :3]), axis=0)  # Only take the first num_point points, and only the first 3 dimensions
+            self.labels.append(label)
+        
+
+    def __len__(self):
+        return len(self.point_sets)
+    
+    def __getitem__(self, idx):
+        point_set = self.point_sets[idx]
+        label = self.labels[idx]
+        
+        return point_set, label
+    
+def QuickDrawDataLoader(Dataset):
+    """
+    Dataloader for QuickDraw Dataset
+    """
+    def __init__(self, root, num_point, split="train", process_data = False):
+        pass
+
+    def __len__(self):
+        pass
+    
+    def __getitem__(self, idx):
+        pass
+    
+    
 class ShapeNetCoreDataLoader(Dataset):
     """ Dataloader forhttps://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_v0.zip
      
@@ -169,3 +219,16 @@ class ShapeNetCoreDataLoader(Dataset):
         
 if __name__ == "__main__":
     pass
+
+
+class S3DISDataLoader(Dataset):
+    """ Dataloader for S3DIS Dataset
+    """
+    def __init__(self, root, num_point, split="train", process_data = False):
+        pass
+
+    def __len__(self):
+        pass
+    
+    def __getitem__(self, idx):
+        pass

@@ -85,13 +85,12 @@ Train with the following command
 ## Performance
 
 
-### Classification 
+### Classification on ModelNet40
 | Model     | Total Accuracy | Class Accuracy | FLOPs | Training Time |
 | --------- | -------------- | -------------- | ----- | ------------- |
-| PointNet  | 90.22%         |                |       |               |
+| PointNet  | 89.94%         |                |       |               |
 | PointNet2 |                |                |       |               |
-
-
+| PointCNN  | 76.99%         |                |       |               |
 
 ```python
 epochs = 100
@@ -100,11 +99,16 @@ use_normals = False
 use_uniform_sample = False
 ```
 
+# TODO Above PointCNN Does not yet have data augmentation yet... May explain performance degredation relative to PointNet.
+
 Example Confusion Matrix
 
 | PointNet                | PointCNN                |
 | ----------------------- | ----------------------- |
 | ![](images/output5.png) | ![](images/output8.png) |
+
+### Classification on TU-Berlin
+
  
 
 ### Part Segmentation
