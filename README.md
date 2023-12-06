@@ -26,6 +26,7 @@ Download the following datasets and place in `data/` directory.
 - Quickdraw
   - https://raw.githubusercontent.com/googlecreativelab/quickdraw-dataset/master/categories.txt
   - https://storage.googleapis.com/quickdraw_dataset/sketchrnn/ + `<above categories>.npz`
+- S3DIS Dataset
 
 ### ModelNet40 Normal Resampled
 Usage of the dataset can be found at `vis_modelnet40_normal_resampled.ipynb`
@@ -43,6 +44,20 @@ Usage of the dataset can be found at `vis_shapenetcore_partanno_seg_norm.ipynb`
 | Airplane (1024)         | Airplane (2466)         |
 | ----------------------- | ----------------------- |
 | ![](images/output4.png) | ![](images/output3.png) |
+
+### TU-Berlin Dataset
+Usage of the dataset can be found at `vis_tu_berlin.ipynb`.
+
+| Barn 2D                 | Barn 3D                 |
+| ----------------------- | ----------------------- |
+| ![](images/output6.png) | ![](images/output7.png) |
+
+
+### MNIST Dataset
+Usage of the dataset can be found at `vis_mnist.ipynb`
+
+
+### Cifar10
 
 ## Training and Testing
 
@@ -87,9 +102,9 @@ use_uniform_sample = False
 
 Example Confusion Matrix
 
-| PointNet                | PointNet2 | PointCNN |
-| ----------------------- | --------- | -------- |
-| ![](images/output5.png) |           |          |
+| PointNet                | PointCNN                |
+| ----------------------- | ----------------------- |
+| ![](images/output5.png) | ![](images/output8.png) |
  
 
 ### Part Segmentation

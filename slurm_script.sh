@@ -19,8 +19,9 @@
 # conda activate py311
 
 # # Run your PyTorch script
-python --version
-python train.py --model pointcnn_v1_cls --dataset ModelNet40_hdf5 --epoch 1 --batch_size 16
+# python --version
+python train.py --model pointnet_cls --dataset ModelNet40 --epoch 100  --batch_size 32
+python train.py --model pointcnn_v1_cls --dataset ModelNet40_hdf5 --epoch 100  --batch_size 32
 
 
 # Jupyter Environment

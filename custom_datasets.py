@@ -23,7 +23,7 @@ def pc_normalize(pc):
 def load_h5(h5_filename):
     f = h5py.File(h5_filename)
     data = f['data'][:]
-    label = f['label'][:]
+    label = f['label'][:] # .astype(np.int32)
     return (data, label)
     
 
@@ -110,14 +110,17 @@ class ModelNetPlyHDF52048DataLoader(Dataset):
         self.process_data = process_data
         self.split = split.lower()
         
-        if self.split == "train":
-            self.files = os.path.join(self.root, 'train_files.txt')
-            self.files = [line.rstrip() for line in open(self.files)]
-        elif self.split == "test":
-            self.files = os.path.join(self.root, 'test_files.txt')
-            self.files = [line.rstrip() for line in open(self.files)]
+        file_list_name = 'train_files.txt' if self.split == "train" else 'test_files.txt'
+        self.files = [line.rstrip() for line in open(os.path.join(self.root, file_list_name))]
         
-        
+        # Preload data
+        self.point_sets = []
+        self.labels = []
+        for f in self.files:
+            point_set, label = load_h5(f)
+            self.point_sets.append(point_set)
+            self.labels.append(label)
+
         # Get category information
         self.categories = [line.rstrip() for line in open(os.path.join(self.root, 'shape_names.txt'))]
         self.idx_classes = dict(zip(range(len(self.categories)), self.categories))
@@ -127,24 +130,28 @@ class ModelNetPlyHDF52048DataLoader(Dataset):
     def __len__(self):
         # TODO Hardcoded for now
         if self.split == "train":
-            return 9840
+            return 9840  # 2048 + 2048 + 2048 + 2048 + 1468
         elif self.split == "test":
-            return 4096
+            return 2048 + 420
     
     def __getitem__(self, idx):
-        # index div 2048 to get the file index
-        file_idx = idx // 2048
-        # index mod 2048 to get the point index
-        point_idx = idx % 2048
+        file_idx = idx // 2048  # index div 2048 to get the file index
+        point_idx = idx % 2048  # index mod 2048 to get the point index
         
-        # Load the file
-        point_set, label = load_h5(self.files[file_idx])
+        # # Load the file
+        # point_set, label = load_h5(self.files[file_idx])
         
-        # Number of points in the file
-        point_set = point_set[point_idx]
-        point_set = point_set[:self.npoints, :]
+        # # Get point_idx in point_set
+        # point_set = point_set[point_idx]
+        # point_set = point_set[:self.npoints, :]
         
-        return point_set, label[point_idx].squeeze()
+        point_set = self.point_sets[file_idx][point_idx][:self.npoints, :]
+        label = self.labels[file_idx][point_idx].squeeze()
+        
+        return point_set, label
+        
+
+        # return point_set, label[point_idx].squeeze()
  
  
 class ShapeNetCoreDataLoader(Dataset):

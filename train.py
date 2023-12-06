@@ -161,14 +161,25 @@ def pointcnn_v1_cls_training_step(model, dataloader, optimizer, criterion, devic
         
         total_loss += loss.item()
         total_acc += torch.sum(torch.argmax(output, dim=1) == label).item() / len(label)
-        print(f"batch: {batch_idx}, loss: {loss.item()}")
+        # print(f"batch: {batch_idx}, loss: {loss.item()}")
     
     return total_acc / len(dataloader), total_loss / len(dataloader)
 
 def pointcnn_v1_cls_testing_step(model, dataloader, criterion, device):
     model.eval()
     total_loss, total_acc = 0.0, 0.0
-    pass
+    for batch_idx, (data, label) in tqdm(enumerate(dataloader), total=len(dataloader), smoothing=0.9):
+        if device.type == "cuda":
+            data, label = data.to(device), label.to(device)
+    
+        output = model((data, data))
+        predicted = torch.argmax(output, dim=1)
+        total_acc += (predicted == label).sum().item() / label.size(0)
+
+    # TODO Return something other than total loss or calculate total loss
+    return total_acc / len(dataloader), total_loss
+        
+        
 ####################################################################################################
 
 
@@ -293,17 +304,18 @@ def main(args):
             test_acc, test_loss, test_batch_time = testing_step(model, test_dataloader, criterion, device)
         elif args.model == "pointcnn_v1_cls":
             train_acc, train_loss = pointcnn_v1_cls_training_step(model, train_dataloader, optimizer, criterion, device)
-           
-            # test_acc, test_loss = pointcnn_v1_cls_testing_step(model, test_dataloader, criterion, device)
+            test_acc, test_loss = pointcnn_v1_cls_testing_step(model, test_dataloader, criterion, device)
        
         scheduler.step()
         ###############################
         
     
         # Log
-        print(f"Train_acc {train_acc}, Train_loss {train_loss}, test_acc {test_acc}, test_loss {test_loss}")
+        print()
+        # print(f"Train_acc {train_acc}, Train_loss {train_loss}, test_acc {test_acc}, test_loss {test_loss}")
         writer.add_scalar('training loss', train_acc, epoch)
         logger.info(f"Epoch {epoch} / {args.epoch}")
+        logger.info(f"Train_acc {train_acc}, Train_loss {train_loss}, test_acc {test_acc}, test_loss {test_loss}")
         logger.info(f"Average train/test batch time: {train_batch_time} / {test_batch_time}")
         
         # Get best instance and safe
