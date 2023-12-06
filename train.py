@@ -194,7 +194,6 @@ def main(args):
         model = PointNetSegmentation()
         criterion = PointNetSegmentationLoss()
     elif args.model == "pointnet_part_seg":
-        model = 
         pass
     elif args.model == "pointnet2_cls":
         pass
