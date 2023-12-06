@@ -20,9 +20,11 @@
 
 # # Run your PyTorch script
 # python --version
+
 python train.py --model pointnet_cls --dataset ModelNet40 --epoch 100  --batch_size 32
 # python train.py --model pointcnn_v1_cls --dataset ModelNet40_hdf5 --epoch 100  --batch_size 32
-#
+
+# python train.py --model pointnet_cls --dataset TUBerlin --epoch 100  --batch_size 32 --num_category 250
 
 # Jupyter Environment
 # jupyter notebook --ip=0.0.0.0 --port=3001 --no-browser

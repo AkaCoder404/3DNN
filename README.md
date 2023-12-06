@@ -99,7 +99,7 @@ use_normals = False
 use_uniform_sample = False
 ```
 
-# TODO Above PointCNN Does not yet have data augmentation yet... May explain performance degredation relative to PointNet.
+> NOTE: Above PointCN does not yet have data augmentation yet... May explain performance degredation relative to PointNet.
 
 Example Confusion Matrix
 
@@ -109,7 +109,6 @@ Example Confusion Matrix
 
 ### Classification on TU-Berlin
 
- 
 
 ### Part Segmentation
 

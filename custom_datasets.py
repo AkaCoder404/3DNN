@@ -22,8 +22,8 @@ def pc_normalize(pc):
 # Load hdf5 file
 def load_h5(h5_filename):
     f = h5py.File(h5_filename)
-    data = f['data'][:]
-    label = f['label'][:] # .astype(np.int32)
+    data = np.float32(f['data'][:])
+    label = f['label'][:]
     return (data, label)
     
 
@@ -165,20 +165,26 @@ class TUBerlinDataLoader(Dataset):
         
         file_list_name = 'train_files.txt' if split == "train" else 'test_files.txt'
         self.files = [os.path.join(self.root, line.rstrip()[2:]) for line in open(os.path.join(self.root, file_list_name))]
-        print(self.files)
         
         # Preload data
-        self.point_sets = np.empty((0, self.npoints, 3))
-        self.labels = []
+        self.point_sets = np.empty((0, self.npoints, 3), dtype=np.float32)
+        self.labels = np.empty((0), np.int32)
         for f in self.files:
-            point_set, label = load_h5(f)
-            print(len(label))
-            
-            # Append dataset to one numpy array
-            print(point_set.shape)
-            print(self.point_sets.shape)
+            point_set, label = load_h5(f)    
             self.point_sets = np.concatenate((self.point_sets, point_set[:, :self.npoints, :3]), axis=0)  # Only take the first num_point points, and only the first 3 dimensions
-            self.labels.append(label)
+            # self.labels.append(label)
+            
+            # print(label.shape)
+            self.labels = np.concatenate((self.labels, label), axis=0)
+            
+        
+        self.classes_idx = {}
+        self.idx_classes = {}
+        with open(self.root + "/categories.txt", "r") as file:
+            for idx, line in enumerate(file):
+                class_name, class_idx = ' '.join(line.rstrip().split(' ')[:-1]), idx
+                self.classes_idx[class_name] = int(class_idx)
+                self.idx_classes[int(class_idx)] = class_name
         
 
     def __len__(self):

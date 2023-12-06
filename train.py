@@ -21,13 +21,12 @@ from tqdm import tqdm
 import numpy as np
 
 from Models.pointnet import PointNetClassification, PointNetClassificationLoss, \
-    PointNetSegmentation, PointNetSegmentationLoss 
+    PointNetSegmentation, PointNetSegmentationLoss
     
 from Models.pointcnn_v1 import PointCNNClassification_V1
     
-from custom_datasets import ModelNetDataLoader, ModelNetPlyHDF52048DataLoader
+from custom_datasets import ModelNetDataLoader, ModelNetPlyHDF52048DataLoader, TUBerlinDataLoader
 import utils
-
 
 def parse_args():
     parser = argparse.ArgumentParser('training')
@@ -45,7 +44,7 @@ def parse_args():
 
     # Dataset specific
     parser.add_argument('--dataset', type=str, default='ModelNet40', help='dataset for training')
-    parser.add_argument('--num_category', default=40, type=int, choices=[10, 40],  help='training on ModelNet10/40')
+    parser.add_argument('--num_category', default=40, type=int,  help='Number of categories')
     parser.add_argument('--num_point', type=int, default=1024, help='Point Number')
     parser.add_argument('--use_normals', action='store_true', default=False, help='use normals')
     parser.add_argument('--process_data', action='store_true', default=False, help='save data offline')
@@ -77,11 +76,12 @@ def training_step(model: nn.Module, train_data_loader: DataLoader, optimizer: nn
     for batch_idx, (points, target) in tqdm(enumerate(train_data_loader, 0), total=len(train_data_loader), smoothing=0.9):
         batch_start_time = time.time()
     
-        # Perform data augmentation
+        # TODO Perform data augmentation
         points = points.data.numpy()
         points = utils.random_point_dropout(points)
         points[:, :, 0:3] = utils.random_scale_point_cloud(points[:, :, 0:3])
         points[:, :, 0:3] = utils.shift_point_cloud(points[:, :, 0:3])
+        
         points = torch.Tensor(points)
         points = points.transpose(2, 1)
 
@@ -107,11 +107,13 @@ def training_step(model: nn.Module, train_data_loader: DataLoader, optimizer: nn
         
     return total_acc / len(train_data_loader), total_loss / len(train_data_loader), total_batch_time / len(train_data_loader)
      
-def testing_step(model: nn.Module, test_data_loader: DataLoader, criterion: nn.Module, device: torch.device):
+def testing_step(model: nn.Module, test_data_loader: DataLoader, criterion: nn.Module, device: torch.device, args):
     """"""
     model.eval()
     mean_correct = []
-    class_acc = np.zeros((40, 3))
+    
+    # TODO Hardcode class counts
+    class_acc = np.zeros((args.num_category, 3))
     
     total_acc, total_loss, total_batch_time  = 0.0, 0.0, 0.0
     with torch.inference_mode():
@@ -177,9 +179,7 @@ def pointcnn_v1_cls_testing_step(model, dataloader, criterion, device):
         total_acc += (predicted == label).sum().item() / label.size(0)
 
     # TODO Return something other than total loss or calculate total loss
-    return total_acc / len(dataloader), total_loss
-        
-        
+    return total_acc / len(dataloader), total_loss 
 ####################################################################################################
 
 
@@ -188,12 +188,13 @@ def main(args):
     
     # Select model
     if args.model == "pointnet_cls":
-        model = PointNetClassification(k=40, normal_channel=args.use_normals)
+        model = PointNetClassification(k=args.num_category, normal_channel=args.use_normals)
         criterion = PointNetClassificationLoss()
     elif args.model == "pointnet_seg":
         model = PointNetSegmentation()
         criterion = PointNetSegmentationLoss()
     elif args.model == "pointnet_part_seg":
+        model = 
         pass
     elif args.model == "pointnet2_cls":
         pass
@@ -231,6 +232,13 @@ def main(args):
         pass
     elif args.dataset == "ShapeNet":
         pass
+    elif args.dataset == "TUBerlin":
+        data_path = "data/tu_berlin/"
+        train_dataset = TUBerlinDataLoader(root=data_path, num_point=args.num_point, split="train")
+        test_dataset = TUBerlinDataLoader(root=data_path, num_point=args.num_point, split="test")
+        train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+        test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+        
     print(f"Dataset Lengths: train({len(train_dataset)}), test({len(test_dataset)})")
         
     # Select Device
@@ -301,7 +309,7 @@ def main(args):
         # Perform training and testing
         if args.model == "pointnet_cls":
             train_acc, train_loss, train_batch_time = training_step(model, train_dataloader, optimizer, criterion, device)
-            test_acc, test_loss, test_batch_time = testing_step(model, test_dataloader, criterion, device)
+            test_acc, test_loss, test_batch_time = testing_step(model, test_dataloader, criterion, device, args)
         elif args.model == "pointcnn_v1_cls":
             train_acc, train_loss = pointcnn_v1_cls_training_step(model, train_dataloader, optimizer, criterion, device)
             test_acc, test_loss = pointcnn_v1_cls_testing_step(model, test_dataloader, criterion, device)
